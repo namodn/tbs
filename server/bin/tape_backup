@@ -4,33 +4,41 @@
 . $HOME/etc/config
 
 if test "z$1" == "z"; then
-        echo "Date not specified! Aborting."
-        exit 1
+	echo "Date not specified! Aborting."
+	exit 1
 else
-        DATE=$1
+	DATE=$1
 fi
 
 if test "z$2" == "z"; then
-        echo "Frequency not specified! Aborting."
-        exit 1
+	echo "Frequency not specified! Aborting."
+	exit 1
 else
-        FREQUENCY=$2
+	FREQUENCY=$2
 fi
 
 TODO=`ls *.$FREQUENCY | awk -F. '{print $1}'`
 
 if test "z$TODO" == "z"; then
-        echo "No files found for specified frequency $FREQUENCY!"
-        exit 1
+	echo "No files found for specified frequency $FREQUENCY!"
+	exit 1
 fi
 
-echo "-----------------------------------------" >> $LOGS/$DATE.txt
-echo "Backup started `date`" >> $LOGS/$DATE.txt
-echo "-----------------------------------------" >> $LOGS/$DATE.txt
-echo "`mt status`" >> $LOGS/$DATE.txt
-echo "-----------------------------------------" >> $LOGS/$DATE.txt
+TODIR="$ARCHIVE/$FREQUENCY/$DATE"
+if test ! -d "$ARCHIVE/$FREQUENCY"; then
+	mkdir $ARCHIVE/$FREQUENCY
+fi
+if test -d "$TODIR"; then
+	echo "Backup directory $TODIR already exists."
+	exit 1
+else
+	mkdir $TODIR
+fi
 
 for SERVER in $TODO; do
+	# load global defaults
+	. $HOME/etc/config
+
 	# load config override file, if it exists
 	if test -f "$HOME/etc/$SERVER"; then
 		. $HOME/etc/$SERVER
@@ -39,42 +47,21 @@ for SERVER in $TODO; do
 	for LINE in `cat $SERVER.$FREQUENCY`; do
 		PART=`echo $LINE | awk -F: '{print $1}'`
 		FILE=`echo $LINE | awk -F: '{print $2}'`
-		echo $PART > /tmp/backup.state
-		echo "" >> $LOGS/$DATE.txt
-		echo "-----------------------------------------" >> $LOGS/$DATE.txt
-		echo "Backup started for $PART on $SERVER - `date`" >> $LOGS/$DATE.txt
-		echo "-----------------------------------------" >> $LOGS/$DATE.txt
-		if [ "$SERVER" == "$HOST" ]; then
-			# host is local, no need to use SSH
-			$TAR $ARCHIVE "$FILE" 1>> $LOGS/$DATE.txt 2>> $LOGS/tmp_error.txt
-		else
-			# host is remote, use SSH
-			$SSH -p $SSH_PORT -l $USER $SERVER $TAR rio:$ARCHIVE "$FILE" 1>> $LOGS/$DATE.txt 2>> $LOGS/tmp_error.txt
-		fi
+		echo $COUNT > /tmp/backup.state
+		$SSH -p $SSH_PORT -l $USER $SERVER $TAR "$FILE" $COMPRESS > $TODIR/backup-"$SERVER"-"$PART".tgz
 		ERROR=$?
-
-		echo "-----------------------------------------" >> $LOGS/$DATE.txt
-		echo "Backup ended for $PART on $SERVER - `date`" >> $LOGS/$DATE.txt
-		echo "-----------------------------------------" >> $LOGS/$DATE.txt
-		echo "`mt status`" >> $LOGS/$DATE.txt
-		echo "-----------------------------------------" >> $LOGS/$DATE.txt
-		
-		if [ -f $LOGS/tmp_error.txt ]
-		then
-			echo -n
-		else
-			exit 0
-		fi
-		
-		if [ `grep -v "Removing leading" $LOGS/tmp_error.txt` ]
-		then
-			echo "Errors for $DATE" >> $LOGS/error.txt
-			grep -v "Removing leading" $LOGS/tmp_error.txt >> $LOGS/error.txt
-		fi
-
-		rm $LOGS/tmp_error.txt
-
-		if test $ERROR -ne 0; then exit $ERROR; fi
+		if test $ERROR -ne 0; then 
+			echo "ERROR ON $SERVER $PART"
+			exit $ERROR 
+                fi
+		# this will print an error if the tarfile can't be read
+                CONTENTS=`tar ztf $TODIR/backup-"$SERVER"-"$PART".tgz`
+                if test -z "$CONTENTS"
+                then
+                        echo "ERROR ON $SERVER $PART"
+                        echo "TARBALL IS EMPTY!"
+                        exit 1
+                fi
 		COUNT=`expr $COUNT + 1`
 	done
 done
