@@ -1,0 +1,13 @@
+#!/bin/sh
+
+ARCHIVE="$HOME/archive/*"
+OLD_FILES=`find $ARCHIVE -type d -ctime 1`
+
+if test -z "$OLD_FILES"; then
+	exit 0
+fi
+
+for file in $OLD_FILES; do
+	echo "Purging old file : $file"
+	rm -rf $file
+done

@@ -1,0 +1,49 @@
+#!/bin/sh
+
+SSH="/usr/bin/ssh"
+TAR="tar -zcf -"
+ARCHIVE="$HOME/archive"
+USER=backup
+
+if test "z$1" == "z"; then
+	echo "Date not specified! Aborting."
+	exit 1
+else
+	DATE=$1
+fi
+
+if test "z$2" == "z"; then
+	echo "Frequency not specified! Aborting."
+	exit 1
+else
+	FREQUENCY=$2
+fi
+
+TODO=`ls *.$FREQUENCY | awk -F. '{print $1}'`
+
+if test -z $TODO; then
+	echo "No files found for specified frequency $FREQUENCY!"
+	exit 1
+fi
+
+TODIR="$ARCHIVE/$DATE"
+
+if test -d "$TODIR"; then
+	echo "Backup directory $TODIR already exists."
+	exit 1
+else
+	mkdir $TODIR
+fi
+
+for SERVER in $TODO; do
+	COUNT=1
+	for LINE in `cat $SERVER.$FREQUENCY`; do
+		PART=`echo $LINE | awk -F: '{print $1}'`
+		FILE=`echo $LINE | awk -F: '{print $2}'`
+		echo $COUNT > /tmp/backup.state
+		$SSH -l $USER $SERVER $TAR "$FILE" > $TODIR/backup-"$SERVER"-"$PART".tgz
+		ERROR=$?
+		if test $ERROR -ne 0; then exit $ERROR; fi
+		COUNT=`expr $COUNT + 1`
+	done
+done

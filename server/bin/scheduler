@@ -1,0 +1,35 @@
+#!/bin/sh
+
+DATE=`date +%Y-%b-%d-%H`
+EMAIL="/tmp/email_"`date +%s`".txt"
+
+if test "z$1" == "z"; then
+        echo "Frequency not specified! Aborting."
+        exit 1
+else
+        FREQUENCY=$1
+fi
+
+MESSAGE=`$HOME/bin/backup $DATE $FREQUENCY 2>&1`
+if test $? -ne 0; then
+	if test -f /tmp/backup.state; then
+		PART=`cat /tmp/backup.state && rm /tmp/backup.state`
+	else
+		PART=1
+	fi
+	echo "Subject: Backup for $DATE failed!" >> $EMAIL
+	echo "Backup for $DATE, part $PART failed!" >> $EMAIL
+	echo "$MESSAGE" >> $EMAIL
+else
+	if test -f /tmp/backup.state; then
+		PART=`cat /tmp/backup.state && rm /tmp/backup.state`
+	else
+		PART=1
+	fi
+	echo "Subject: Backup for $DATE succeeded." >> $EMAIL
+	echo "Backup for $DATE, part $PART succeeded." >> $EMAIL
+	echo "$MESSAGE" >> $EMAIL
+fi
+
+cat $EMAIL | /usr/lib/sendmail backup
+rm $EMAIL
