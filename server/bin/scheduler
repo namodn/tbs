@@ -10,7 +10,11 @@ else
         FREQUENCY=$1
 fi
 
-MESSAGE=`$HOME/bin/backup $DATE $FREQUENCY 2>&1`
+if test "z$2" != "z"; then
+	PORT=$2
+fi
+
+MESSAGE=`$HOME/bin/backup $DATE $FREQUENCY $PORT 2>&1`
 if test $? -ne 0; then
 	if test -f /tmp/backup.state; then
 		PART=`cat /tmp/backup.state && rm /tmp/backup.state`
