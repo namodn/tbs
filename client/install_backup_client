@@ -2,7 +2,7 @@
 
 # this script installs the TBS client system
 
-BACKUP_USER='test'
+BACKUP_USER='backup'
 BACKUP_GROUP='backup'
 SYSTEM=`uname`
 
@@ -13,7 +13,7 @@ fi
 
 TAR=`which tar`
 
-# what flavor of Unix is this? try set the home dir accordingly
+# what flavor of Unix is this? set the home dir accordingly
 
 case "$SYSTEM" in
 	Linux)
