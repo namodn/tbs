@@ -65,7 +65,7 @@ do
 				$SSH -p $SSH_PORT -l $USER $SERVER "ls /var/tmp/backup-$PART"
 				if [ "$?" == "0" ]
 				then
-					INC=`$SSH -p $SSH_PORT -l $USER $SERVER $FIND $FILES -newer /var/tmp/backup-$PART`
+					INC=`$SSH -p $SSH_PORT -l $USER $SERVER $FIND $FILES -type f -newer /var/tmp/backup-$PART`
 				else
 					$SSH -p $SSH_PORT -l $USER $SERVER "touch /var/tmp/backup-$PART"
 					INCREMENTAL=0
