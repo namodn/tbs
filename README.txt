@@ -1,8 +1,8 @@
-Aeronet Backup
+TAR-able Backup System
 ---
 
 This file explains how to perform useful administrative functions with the
-Aeronet backup scripts. Contact Rob Helmer <robert@namodn.com> with questions/
+TBS backup scripts. Contact Rob Helmer <robert@roberthelmer.com> with questions/
 problems/suggestions.
 
 
