@@ -1,6 +1,22 @@
 SSH="/usr/bin/ssh"
 SSH_PORT="22"
-TAR="tar -cf -"
+
+#
+# disk
+#
+#TAR="tar -cf -"
+#
+# tape
+#
+#TAR="$HOME/bin/tar --rsh-command=/usr/bin/ssh -cvf"
+#
+# archive location ( device or directory )
+#
+#ARCHIVE="/dev/tape"
+
 COMPRESS="| gzip -c"
 ARCHIVE="$HOME/archive"
 USER=backup
+SENDMAIL='/usr/sbin/sendmail'
+HOST=`hostname | awk -F. '{print $1}'`
+LOGS="$HOME/logs"
