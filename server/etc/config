@@ -1,22 +1,26 @@
-SSH="/usr/bin/ssh"
-SSH_PORT="22"
-
-#
+# TBS Config file
+#########################
 # disk
+#########################
 #
 #TAR="tar -cf -"
 #
+#########################
 # tape
-#
+#########################
 #TAR="$HOME/bin/tar --rsh-command=/usr/bin/ssh -cvf"
 #
+#########################
 # archive location ( device or directory )
-#
+#########################
 #ARCHIVE="/dev/tape"
 
+SENDMAIL='/usr/sbin/sendmail'
+LOGS="$HOME/logs"
+SSH="/usr/bin/ssh"
+SSH_PORT="22"
+TAR="./tar -cf -"
+FIND="./find"
 COMPRESS="| gzip -c"
 ARCHIVE="$HOME/archive"
 USER=backup
-SENDMAIL='/usr/sbin/sendmail'
-HOST=`hostname | awk -F. '{print $1}'`
-LOGS="$HOME/logs"

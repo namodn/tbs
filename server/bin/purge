@@ -1,7 +1,15 @@
 #!/bin/sh
 
-ARCHIVE="$HOME/archive/*"
-OLD_FILES=`find $ARCHIVE -type d -ctime 1`
+AGE=$1
+
+if [ "z$AGE" == "z" ]
+then
+	echo "Need to specify age!"
+	exit 1
+fi
+
+ARCHIVE="$HOME/archive/nightly/*"
+OLD_FILES=`find $ARCHIVE -type d -ctime +$AGE`
 
 if test -z "$OLD_FILES"; then
 	exit 0

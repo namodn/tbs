@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DATE=`date +%Y-%b-%d-%H`
+DATE=`date +%Y-%m-%d-%H`
 EMAIL="/tmp/email_"`date +%s`".txt"
 
 if test "z$1" == "z"; then
@@ -9,6 +9,21 @@ if test "z$1" == "z"; then
 else
         FREQUENCY=$1
 fi
+
+if [ "`date +%a`" == "Sat" ]
+then
+	echo "Time for a full backup"
+	INCREMENTAL=0
+elif [ "$FREQUENCY" == "monthly" ]
+then
+	echo "Monthly, do a full backup"
+	INCREMENTAL=0
+else
+	echo "Doing incremental backup"
+	INCREMENTAL=1
+fi
+
+export INCREMENTAL
 
 MESSAGE=`$HOME/bin/backup $DATE $FREQUENCY 2>&1`
 if test $? -ne 0; then

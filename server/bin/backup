@@ -1,0 +1,111 @@
+#!/bin/sh
+
+# load global defaults
+. $HOME/etc/config
+
+if test "z$1" == "z" 
+then
+	echo "Date not specified! Aborting."
+	exit 1
+else
+	DATE=$1
+fi
+
+if test "z$2" == "z"
+then
+	echo "Frequency not specified! Aborting."
+	exit 1
+else
+	FREQUENCY=$2
+fi
+
+TODO=`ls *.$FREQUENCY | awk -F. '{print $1}'`
+
+if test "z$TODO" == "z" 
+then
+	echo "No files found for specified frequency $FREQUENCY!"
+	exit 1
+fi
+
+TODIR="$ARCHIVE/$FREQUENCY/$DATE"
+if test ! -d "$ARCHIVE/$FREQUENCY" 
+then
+	mkdir $ARCHIVE/$FREQUENCY
+fi
+if test -d "$TODIR" 
+then
+	echo "Backup directory $TODIR already exists."
+	exit 1
+else
+	mkdir $TODIR
+fi
+
+for SERVER in $TODO 
+do
+	# load global defaults
+	. $HOME/etc/config
+
+	# load config override file, if it exists
+	if test -f "$HOME/etc/$SERVER" 
+	then
+		. $HOME/etc/$SERVER
+	fi
+	COUNT=1
+	for LINE in `cat $SERVER.$FREQUENCY`
+	do
+		PART=`echo $LINE | awk -F: '{print $1}'`
+		FILES=`echo $LINE | awk -F: '{print $2}'`
+		if [ "z$INCREMENTAL" == "z" ]
+		then
+			# do nothing
+			echo -n
+		else
+			if [ "$INCREMENTAL" == "1" ]
+			then
+				$SSH -p $SSH_PORT -l $USER $SERVER "ls /var/tmp/backup-$PART"
+				if [ "$?" == "0" ]
+				then
+					INC=`$SSH -p $SSH_PORT -l $USER $SERVER $FIND $FILES -newer /var/tmp/backup-$PART`
+				else
+					$SSH -p $SSH_PORT -l $USER $SERVER "touch /var/tmp/backup-$PART"
+					INCREMENTAL=0
+				fi
+				if [ "z$INC" == "z" ]
+				then
+					if [ $INCREMENTAL == 1 ]
+					then
+						echo No incremental to backup for $SERVER/$PART
+						break
+					fi
+				else
+					FILES=$INC
+				fi
+			else
+				if [ $INCREMENTAL == 0 ]
+				then
+					$SSH -p $SSH_PORT -l $USER $SERVER "touch /var/tmp/backup-$PART"
+				fi
+			fi
+		fi
+		if [ $INCREMENTAL == 0 ]
+		then
+			TYPE="FULL"
+		fi
+		if [ $INCREMENTAL == 1 ]
+		then
+			TYPE="INCREMENTAL"
+		fi
+		echo $COUNT > /tmp/backup.state
+		for FILE in $FILES
+		do
+			$SSH -p $SSH_PORT -l $USER $SERVER $TAR \"$FILE\" $COMPRESS >> $TODIR/backup-"$SERVER"-"$PART"-"$TYPE".tgz
+		done
+		ERROR=$?
+		if test $ERROR -ne 0 
+		then 
+			echo "ERROR ON $SERVER $PART"
+			exit $ERROR 
+                fi
+		COUNT=`expr $COUNT + 1`
+	done
+done
