@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# this script installs the TBS client system
+
+BACKUP_USER='test'
+BACKUP_GROUP='backup'
+SYSTEM=`uname`
+
+# what flavor of Unix is this? try set the home dir accordingly
+
+case "$SYSTEM" in
+	Linux)
+		HOMEDIRS='/home'
+	;;
+	SunOS)
+		HOMEDIRS='/export/home'
+	;;
+	FreeBSD)
+		HOMEDIRS='/usr/home'
+	;;
+	*)
+		echo "Sorry, don't recognize $SYSTEM." 
+		echo "I need to know where it keeps the home directories."
+		exit 1
+	;;
+esac
+
+# attempt to add the backup group
+
+groupadd $BACKUP_GROUP
+
+# attempt to add the backup user
+
+useradd -d $HOMEDIRS/$BACKUP_USER -G $BACKUP_GROUP $BACKUP_USER
+
+# create backup user's homedir
+
+mkdir -p $HOMEDIRS/$BACKUP_USER
+
+# copy client_backup script to backup's homedir
+
+cp ./client_backup $HOMEDIRS/$BACKUP_USER
+
+# set the script SUID 0
+
+chown 0:$BACKUP_GROUP $HOMEDIRS/$BACKUP_USER/client_backup
+chmod u=rsx,g=rx,o= $HOMEDIRS/$BACKUP_USER/client_backup
