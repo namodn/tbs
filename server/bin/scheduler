@@ -25,12 +25,16 @@ fi
 
 export INCREMENTAL
 
+if test -f /tmp/backup.state 
+then
+	rm /tmp/backup.state 
+fi
+
+touch /tmp/backup.state
 MESSAGE=`$HOME/bin/backup $DATE $FREQUENCY 2>&1`
 if test $? -ne 0; then
 	if test -f /tmp/backup.state; then
 		PART=`cat /tmp/backup.state && rm /tmp/backup.state`
-	else
-		PART=1
 	fi
 	echo "Subject: Backup for $DATE failed!" >> $EMAIL
 	echo "Backup for $DATE, part $PART failed!" >> $EMAIL

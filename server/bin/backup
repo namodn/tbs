@@ -55,57 +55,41 @@ do
 	do
 		PART=`echo $LINE | awk -F: '{print $1}'`
 		FILES=`echo $LINE | awk -F: '{print $2}'`
-		if [ "z$INCREMENTAL" == "z" ]
-		then
-			# do nothing
-			echo -n
-		else
-			if [ "$INCREMENTAL" == "1" ]
-			then
-				$SSH -p $SSH_PORT -l $USER $SERVER "ls /var/tmp/backup-$PART"
-				if [ "$?" == "0" ]
-				then
-					INC=`$SSH -p $SSH_PORT -l $USER $SERVER $FIND $FILES -newer /var/tmp/backup-$PART`
-				else
-					$SSH -p $SSH_PORT -l $USER $SERVER "touch /var/tmp/backup-$PART"
-					INCREMENTAL=0
-				fi
-				if [ "z$INC" == "z" ]
-				then
-					if [ $INCREMENTAL == 1 ]
-					then
-						echo No incremental to backup for $SERVER/$PART
-						break
-					fi
-				else
-					FILES=$INC
-				fi
-			else
-				if [ $INCREMENTAL == 0 ]
-				then
-					$SSH -p $SSH_PORT -l $USER $SERVER "touch /var/tmp/backup-$PART"
-				fi
-			fi
-		fi
 		if [ $INCREMENTAL == 0 ]
 		then
 			TYPE="FULL"
+			for FILE in $FILES
+			do
+				$SSH -p $SSH_PORT -l $USER $SERVER $TAR \"$FILE\" $COMPRESS >> $TODIR/backup-"$SERVER"-"$PART"-"$TYPE".tgz
+			done
+			$SSH -p $SSH_PORT -l $USER $SERVER "touch /var/tmp/backup-$PART"
 		fi
 		if [ $INCREMENTAL == 1 ]
 		then
 			TYPE="INCREMENTAL"
+			$SSH -p $SSH_PORT -l $USER $SERVER "ls /var/tmp/backup-$PART"
+			if [ "$?" == "0" ]
+			then
+				# this processes files with spaces (or any 
+				# other odd) character(s) in them
+				$SSH -p $SSH_PORT -l $USER $SERVER "$FIND $FILES -type f -newer /var/tmp/backup-$PART -print0 | $XARGS -0 $TAR" $COMPRESS >> $TODIR/backup-"$SERVER"-"$PART"-"$TYPE".tgz
+			fi
 		fi
-		echo $COUNT > /tmp/backup.state
-		for FILE in $FILES
-		do
-			$SSH -p $SSH_PORT -l $USER $SERVER $TAR \"$FILE\" $COMPRESS >> $TODIR/backup-"$SERVER"-"$PART"-"$TYPE".tgz
-		done
+		#  check for fatal errors
 		ERROR=$?
 		if test $ERROR -ne 0 
 		then 
 			echo "ERROR ON $SERVER $PART"
 			exit $ERROR 
                 fi
+		# check for empty files
+		TEST=`/bin/tar ztvf $TODIR/backup-"$SERVER"-"$PART"-"$TYPE".tgz`
+		if [ "z$TEST" == "z" ]
+		then
+			echo "Note: $SERVER $PART produced an empty file."
+		fi
+
+		echo $SERVER-$PART >> /tmp/backup.state
 		COUNT=`expr $COUNT + 1`
 	done
 done
