@@ -1,0 +1,6 @@
+SSH="/usr/bin/ssh"
+SSH_PORT="22"
+TAR="tar -cf -"
+COMPRESS="| gzip -c"
+ARCHIVE="$HOME/archive"
+USER=backup
