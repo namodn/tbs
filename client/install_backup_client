@@ -6,6 +6,13 @@ BACKUP_USER='test'
 BACKUP_GROUP='backup'
 SYSTEM=`uname`
 
+if test -z `which tar`; then
+	echo "The 'tar' command was not found, please make sure it is in a directory on your \$PATH"
+	exit;
+fi
+
+TAR=`which tar`
+
 # what flavor of Unix is this? try set the home dir accordingly
 
 case "$SYSTEM" in
@@ -21,6 +28,7 @@ case "$SYSTEM" in
 	*)
 		echo "Sorry, don't recognize $SYSTEM." 
 		echo "I need to know where it keeps the home directories."
+		echo "Please make an entry for \"`uname`\".";
 		exit 1
 	;;
 esac
@@ -33,15 +41,17 @@ groupadd $BACKUP_GROUP
 
 useradd -d $HOMEDIRS/$BACKUP_USER -G $BACKUP_GROUP $BACKUP_USER
 
-# create backup user's homedir
+# create backup user's homedir, set appropriate permissions
 
 mkdir -p $HOMEDIRS/$BACKUP_USER
+chown backup:backup $HOMEDIRS/$BACKUP_USER
+chmod u=rwx,g=rx,o= $HOMEDIRS/$BACKUP_USER
 
-# copy client_backup script to backup's homedir
+# copy tar to backup's homedir
 
-cp ./client_backup $HOMEDIRS/$BACKUP_USER
+cp $TAR $HOMEDIRS/$BACKUP_USER
 
 # set the script SUID 0
 
-chown 0:$BACKUP_GROUP $HOMEDIRS/$BACKUP_USER/client_backup
-chmod u=rsx,g=rx,o= $HOMEDIRS/$BACKUP_USER/client_backup
+chown 0:$BACKUP_GROUP $HOMEDIRS/$BACKUP_USER/tar
+chmod u=rsx,g=rx,o= $HOMEDIRS/$BACKUP_USER/tar
