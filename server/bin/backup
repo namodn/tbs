@@ -1,11 +1,7 @@
-#!/bin/sh -x
+#!/bin/sh
 
-SSH="/usr/bin/ssh"
-SSH_PORT="22"
-TAR="tar -cf -"
-COMPRESS="| gzip -c"
-ARCHIVE="$HOME/archive"
-USER=backup
+# load global defaults
+. $HOME/etc/config
 
 if test "z$1" == "z"; then
 	echo "Date not specified! Aborting."
@@ -38,10 +34,14 @@ else
 fi
 
 for SERVER in $TODO; do
-	COUNT=1
+	# load global defaults
+	. $HOME/etc/config
+
+	# load config override file, if it exists
 	if test -f "$HOME/etc/$SERVER"; then
 		. $HOME/etc/$SERVER
 	fi
+	COUNT=1
 	for LINE in `cat $SERVER.$FREQUENCY`; do
 		PART=`echo $LINE | awk -F: '{print $1}'`
 		FILE=`echo $LINE | awk -F: '{print $2}'`
