@@ -44,7 +44,7 @@ useradd -d $HOMEDIRS/$BACKUP_USER -G $BACKUP_GROUP $BACKUP_USER
 # create backup user's homedir, set appropriate permissions
 
 mkdir -p $HOMEDIRS/$BACKUP_USER
-chown backup:backup $HOMEDIRS/$BACKUP_USER
+chown $BACKUP_USER:$BACKUP_GROUP $HOMEDIRS/$BACKUP_USER
 chmod u=rwx,g=rx,o= $HOMEDIRS/$BACKUP_USER
 
 # copy tar to backup's homedir
