@@ -28,17 +28,17 @@ The ".nightly" part of the filename is the "frequency". It is whatever you
 pass to the scheduler.
 
 Put an alias and an entry for each path on "hubert" that you would like 
-backed up inside the "hubert.backup" file.
+backed up inside the "hubert.nightly" file.
 
-Example hubert.backup :
+Example hubert.nightly :
 ---
 etc:/etc
 home:/home
 confidential:/home/secret/stuff
 --
 
-To remove a path, delete the line from the "hubert.backup" file. To remove
-hubert from the list of backed up hosts, delete the "hubert.backup" file.
+To remove a path, delete the line from the "hubert.nightly" file. To remove
+hubert from the list of backed up hosts, delete the "hubert.nightly" file.
 
 
 --
@@ -66,7 +66,7 @@ at mechanism to schedule a one-time backup ( see "man at" for more information )
 --
 EXAMPLES
 ( NOTE - These examples will back up ALL hosts and paths specified in the 
-hostname.backup files in the backup user's home directory. Move these files
+hostname.frequency files in the backup user's home directory. Move these files
 around as neccessary ).
 --
 
